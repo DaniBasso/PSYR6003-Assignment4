@@ -1,1 +1,2 @@
-# PSYR6003-Assignment4
+# PSYR6003-Assignment-4
+PSYR6003 Assignment 4

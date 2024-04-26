@@ -1,0 +1,97 @@
+---
+title: "PSYR6003 Assignment 4"
+author: "Daniel Basso"
+format: docx
+---
+#Load Libraries
+```{r}
+library(tidyverse)
+library(flexplot)
+library(lme4)
+library(apaTables)
+library(performance)
+library(haven)
+library(modelsummary)
+```
+
+#Data Import & Format
+```{r}
+mydata <- read_spss("P6003.A4.sav")
+glimpse(mydata)
+summary(mydata)
+```
+
+#Descriptive Stats
+#(M, SD, Correlations w/o clustering)
+```{r}
+var.of.int <- mutate(mydata, Extraversion = tipm.E,  Neuroticism = tipm.N, Satisfaction.With.Life = swl, .keep = "none")
+apa.cor.table(var.of.int, "cortable.doc", show.sig.stars = F)
+```
+
+
+#Data Screening & model building
+```{r}
+#univariate
+flexplot(tipm.E~1, data = mydata)
+flexplot(tipm.N~1, data = mydata)
+flexplot(swl~1, data = mydata)
+
+#LME with RI for Outcome Only
+
+baseline <- lmer (swl ~ 1+(1|id), data = mydata)
+summary(baseline)
+
+#Reduced extraversion (fixed only)
+fixed.e <- lmer (swl ~  tipm.E + (1|id), data = mydata)
+summary(fixed.e)
+
+#Full extraversion (Fixed & random)
+random.e <- lmer (swl ~ tipm.E + (tipm.E|id), data = mydata)
+summary(random.e)
+
+#Model Comparison
+model.comparison(fixed.e, random.e)
+
+#Reduced extraversion w/ neuroticism (fixed only)
+fixed.n <- lmer (swl ~  tipm.E +tipm.N + (tipm.E|id), data = mydata)
+summary(fixed.n)
+
+#Full extraversion w/ neuroticism (Fixed & random)
+random.n <- lmer (swl ~ tipm.E + tipm.N + (tipm.E + tipm.N|id), data = mydata)
+summary(random.n)
+
+#Model Comparison w/ neuroticism 
+model.comparison(fixed.n, random.n)
+```
+
+
+
+#Final Model + Checks
+#Extraversion and Neuroticism predicting satisfaction with life
+#Clustered by participant
+#B, SEs, 95% CIs, ICC, R2
+```{r}
+#Final Model 
+final <- lmer (swl ~ tipm.E + tipm.N + (tipm.E + tipm.N|id), data = mydata)
+  
+#Visualize model 
+visualize(final, plot = "model")
+
+#Diagnostics
+visualize(final, plot = "residuals" )
+
+#Get summary
+summary(final)
+
+
+#Get estimates. 
+estimates(final)
+get_estimates(final)
+
+#Get traditional R2 estimates
+
+r2(final)
+
+
+```
+
